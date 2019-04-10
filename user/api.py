@@ -3,8 +3,10 @@ from django.http import HttpResponse, JsonResponse
 
 from common import keys, errors
 from lib.sms import send_sms
-from lib.http import render_json
+from lib.https import render_json
+from user import logics
 from user.models import User
+from user.forms import ProfileForm
 
 
 def submit_phone(request):
@@ -37,14 +39,41 @@ def submit_vcode(request):
 
 def get_profile(request):
     """获取个人资料"""
-    pass
+    uid = request.session.get('uid')
+    user = User.ordering.get(id=uid)
+
+    profile = user.profile
+
+    return render_json(profile.to_string())
 
 
 def set_profile(request):
     """修改个人资料"""
-    pass
+    if not request.method == "POST":
+        return HttpResponse('request method error')
+
+    uid = request.session.get('uid')
+    profile_form = ProfileForm(request.POST)
+
+    if profile_form.is_valid():
+        profile = profile_form.save(commit=False)
+        profile.id = uid
+        profile.save()
+        return render_json('modify profile success')
+
+    else:
+        raise render_json(profile_form.errors,errors.FROM_VALUE_ERROR)
 
 
 def upload_avatar(request):
     """头像上传"""
-    pass
+    if not request.method == "POST":
+        return HttpResponse('request method error')
+
+    avatar = request.FILES.get('avatar')
+    uid = request.session.get('uid')
+    user = User.objects.get(id=uid)
+
+    logics.upload_avatar.delay(user, avatar)
+
+    return render_json('upload success')
