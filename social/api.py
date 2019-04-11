@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from lib.https import render_json
@@ -12,8 +13,16 @@ def get_rcmd_user(request):
 
     return render_json(users_list)
 
+
 def like(request):
-    pass
+
+    if not request.method == "POST":
+        return HttpResponse('request method error')
+
+    sid = request.POST.get('sid')
+    mathed = logics.like(request.user,sid)
+
+    return render_json({'mathed':mathed})
 
 
 def superlike(request):

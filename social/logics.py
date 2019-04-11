@@ -1,6 +1,6 @@
 import datetime
 from user.models import User
-from social.models import Swipe
+from social.models import Swipe,Friend
 
 
 def get_rcmd_users(user):
@@ -21,3 +21,14 @@ def get_rcmd_users(user):
     ).exclude(id__in=swiped_uid_list)[0:20]
 
     return users
+
+
+def like(user,sid):
+
+    Swipe.swipe(flag='like',uid=user.id,sid=sid)
+
+    if Swipe.is_someone_like_you(uid=sid, sid=user.id):
+        Friend.make_friend(sid,user.id)
+        return True
+    else:
+        return False
